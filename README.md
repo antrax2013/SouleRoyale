@@ -2,9 +2,13 @@
 La Soule Royales est un jeu où s'affronte deux équipes de 11 joueurs. La première équipe à mettre la soule dans la zone d'embute adverse remporte la partie.
 
 ## Objectif
-L'objectif de ce kata est de coder l'arbitre. C'est à le moteur permettant de déterminer l'évolution de la partie. Il conviendra donc : 
+L'objectif de ce kata est de coder l'arbitre. C'est à dire le moteur permettant de déterminer l'évolution de la partie. Il conviendra donc : 
 - lire les instructions fournies par les capitaines des deux équipes
-- afficher la position de la soule, des joueurs et de leur état découlant des instructions
+- afficher à la fin de chaque tour la position de la soule, des joueurs ainsi que le nombre de point de vie découlant des instructions
+
+## Instructions pour le Kata
+- les exemples ci-dessous sont des exemples valides qui peuvent être utilisé pour les tests
+- il n'y a pas de consignes précises quand à l'affichage
    
 # Déroulement d'un match
 Le terrain est composé de 7 lignes. Les 2 extrémités sont les zones d'embutes. Chaque joueur à 4 points de vie.
@@ -17,25 +21,30 @@ Chaque case est représentée par un nombre allant de 1, la ligne la plus proche
    __Dès que la soule se trouve en zone d'embute, la partie s'arrète.__
 3. Fin de la phase de résolution, l'autre équipe devient l'équipe active et on recommence au point 1
 
-_Ex :_
+## Phase Initiale
+_Instructions :_
 - $\color{red}{Equipe\ 1: 2\ 1\ 1\ 1\ 1\ 2\ 1\ 1\ 1\ 1\ 2}$
 - $\color{blue}{Equipe\ 2: 1\ 1\ 1\ 1\ 2\ 1\ 1\ 2\ 2\ 2\ 1}$
 
   ![image](https://github.com/user-attachments/assets/34ebde7f-8448-4d06-87f2-03ff7d1c2f91)
 
-
+## Les instructions
 Ensuite, une fois les joueurs sur le terrain, les 2 capitianes fournissent à l'arbitre leurs instructions.
 Les actions possibles sont :
 - ne rien faire : `0`
 - avancer d'une ligne : `+`
   
-  _Lorsqu'un joueur se déplace, si la soule se trouve sur la ligne suivante, automatiquement, celle-ci avance d'une ligne également._
+  _Lorsqu'un joueur se déplace, si la soule se trouve sur la ligne suivante, le joueur, obligatoirement, la pousse et donc celle-ci avance également d'une ligne._
   ![Alt Text](http://soule.royale.free.fr/Images/regles/Pousse_soule.gif)
 - reculer d'une ligne : `-`
-- frapper le joueur n° X où X est le numéro du joueur : `X`
+  _Reculer ne fait pas bouger la soule_
+- frapper le joueur n° A où A est le numéro du joueur qui est ciblé : `A`
+  _Lors de la résolution de l'action du joueur en courant, il ne parviendra à frapper son adversaire uniquement si celui-ci se trouve sur la même ligne que lui au moment où l'arbitre résout son action. Si tel est le cas, le joueur subissant le coup perd 1 point de vie. Un joueur sans point de vie est Ko._
+- `X` : un joueur Ko
 
-_Ex :_
-- $\color{red}{Equipe\ 1: 0\ -\ 0\ 0\ 0\ +\ +\ +\ +\ +\ -}$
+## Tour 1
+_Instructions :_
+- $\color{red}{Equipe\ 1: 0\ -\ 0\ 0\ 0\ +\ +\ +\ +\ +\ -}$ _équipe active_
 - $\color{blue}{Equipe\ 2: +\ +\ +\ +\ 0\ +\ +\ 0\ +\ +\ +\}$
 
 Pour résoudre les insctuctions, l'arbitre commence donc par l'action du joueur $\color{red}{n°1}$ de l'équipe active. Son capitaine a choisi qu'il ne fasse rien.
@@ -46,6 +55,28 @@ _Ci-dessous l'exemple animé de la résolution à partir des instructions de l'e
   ![Alt Text](http://soule.royale.free.fr/Images/regles/Phase1.gif)
 
 
-Le tour est terminé.  $\color{blue}{L'équipe 2} devient l'équipe active.
+Le tour est terminé. L' $\color{blue}{équipe\ 2}$ devient l'équipe active.
+
+## Tour 2
+_Instructions :_
+- $\color{red}{Equipe\ 1: 0\ +\ 1\ +\ 1\ +\ +\ 11\ 11\ +\ +}$
+- $\color{blue}{Equipe\ 2: +\ 7\ 7\ +\ +\ 7\ 7\ +\ +\ +\ 8\}$ _équipe active_
+
+![Alt Text](http://soule.royale.free.fr/Images/regles/Phase2.gif)
+> _Légende :_
+> - Chaque point noir, représente une blessure, à 4 c'est le KO
+
+## Tour 3
+- $\color{red}{Equipe 1 : +\ +\ 1\ +\ 1\ 11\ X\ 11\ 11\ +\ 0\}$ _équipe active_
+- $\color{blue}{Equipe 2 : -\ 9\ 9\ -\ -\ 9\ 9\ 8\ 8\ 8\ 8\}$
+
+![Alt Text](http://soule.royale.free.fr/Images/regles/Phase3.gif)
+
+__La victoire revient à l'équipe rouge.__
+ 
+
+# Auteur
+[![build](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/cyril-cophignon-b58b5a5b/)
+
 
 
