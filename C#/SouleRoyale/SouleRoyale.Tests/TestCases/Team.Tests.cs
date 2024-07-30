@@ -16,7 +16,7 @@ public sealed class TeamTests : Feature
     [When(@"I create a new team")]
     public void I_create_a_new_player()
     {
-        _team = new Team();
+        _team = new Team("");
     }
 
     [Then(@"The team have 11 players")]

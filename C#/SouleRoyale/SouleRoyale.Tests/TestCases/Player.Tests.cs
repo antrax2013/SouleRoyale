@@ -39,4 +39,11 @@ public sealed class PlayerTests : Feature
     {
         Check.That(_player.Position).IsEqualTo(0);
     }
+
+    [And(@"The player is not ko")]
+    public void The_player_is_not_ko()
+    {
+        Check.That(_player.IsKo).IsFalse();
+    }
+
 }
