@@ -1,10 +1,5 @@
 ﻿using Gherkin.Ast;
-using Newtonsoft.Json.Linq;
 using NFluent;
-using System.Collections;
-using System.Collections.Generic;
-using System.Numerics;
-using System.Runtime.InteropServices;
 using Xunit.Gherkin.Quick;
 using Feature = Xunit.Gherkin.Quick.Feature;
 
@@ -13,7 +8,7 @@ namespace SouleRoyale.Tests.TestCases;
 [FeatureFile(@"./Features/Game.feature")]
 public class GameTests : Feature
 {
-    private Game _game;
+    private Game _game = new();
 
     [When(@"I create a new game")]
     [Given(@"a new game")]
@@ -33,7 +28,7 @@ public class GameTests : Feature
     #region Create a game
 
     [Given(@"I ask to create a new game")]
-    public void I_ask_to_create_a_new_game() { }
+    public static void I_ask_to_create_a_new_game() { }
 
     [Then(@"2 teams have been created")]
     public void _2_teams_have_been_created()
@@ -44,17 +39,8 @@ public class GameTests : Feature
     [And(@"Teams have 11 players")]
     public void Teams_have_11_players()
     {
-        var teamsWith11Playes = _game.Teams.Where(t => t.Players.Count == 11).ToList();
+        var teamsWith11Playes = _game.Teams.Where(t => t.Value.Players.Count == 11).ToList();
         Check.That(_game.Teams).CountIs(2);
-    }
-
-    [And(@"The first team is active")]
-    public void The_first_team_is_active()
-    {
-        var firstTeam = _game.Teams.First();
-        var activeTeam = _game.ActiveTeam;
-
-        Check.That(activeTeam).IsEqualTo(firstTeam);
     }
 
     [And(@"The turn number is 0")]
@@ -76,7 +62,13 @@ public class GameTests : Feature
     [And(@"The max turn number is 7")]
     public void The_max_turn_number_is_7()
     {
-        Check.That(Game.MaxNumberOfTurn).IsEqualTo(7);
+        Check.That(_game.MaxNumberOfTurn).IsEqualTo(7);
+    }
+
+    [And(@"The game is not over")]
+    public void The_game_is_not_over()
+    {
+        Check.That(_game.IsOver).IsFalse();
     }
 
     [And(@"Winner is null")]
@@ -90,14 +82,14 @@ public class GameTests : Feature
     [When(@"captain of first team gives the following instructions ([0-9 ]+)")]
     public void Captain_of_first_team_give_the_following_instructions(string instructions)
     {
-        _game.InitializePositions(instructions, true);
+        _game.InitializePositions(instructions, TeamsKey.Team1);
     }
 
     [Then(@"players are in -2 -1 -1 -1 -1 -2 -1 -1 -1 -1 -3 lines")]
     public void Players_are()
     {
         int[] expectedPosition = [-2, -1, -1, -1, -1, -2, -1, -1, -1, -1, -3];
-        var firstTeamsPlayer = _game.Teams.First().Players;
+        var firstTeamsPlayer = _game.Teams[TeamsKey.Team1].Players;
 
         for (int i = 0; i < 11; i++)
         {
@@ -108,7 +100,7 @@ public class GameTests : Feature
 
     #region Set players of first team invalide intial positions
     [Given(@"captain of first team gives the following instructions a invalid operation exception fires:")]
-    public void Captain_of_first_team_give_the_following_instructions(DataTable dataTable)
+    public static void Captain_of_first_team_give_the_following_instructions(DataTable dataTable)
     {
         foreach (var row in dataTable.Rows.Skip(1))
         {
@@ -118,7 +110,7 @@ public class GameTests : Feature
             var wrongValue = row.Cells.ElementAt(0).Value.Split(" ").First();
 
             // When/Then
-            Check.ThatCode(() => game.InitializePositions(instructions,true))
+            Check.ThatCode(() => game.InitializePositions(instructions, TeamsKey.Team1))
             .Throws<InvalidOperationException>()
             .WithMessage($"The initial player position must beetween 1 and 3, current value: {wrongValue} is wrong.");
 
@@ -141,34 +133,30 @@ public class GameTests : Feature
                 )
             ));
         var initiales = instructions.Dequeue();
-        _game.InitializePositions(initiales.Item1, true);
-        _game.InitializePositions(initiales.Item2, false);
+        _game.InitializePositions(initiales.Item1, TeamsKey.Team1);
+        _game.InitializePositions(initiales.Item2, TeamsKey.Team2);
 
 
         while (
             instructions.TryDequeue(out var instruction)
-            && _game.Winner == null
-            && _game.NumberOfTurn <= Game.MaxNumberOfTurn
+            && !_game.IsOver
         )
         {
             Check.That(instruction).IsNotNull();
-
-#pragma warning disable CS8602 // Déréférencement d'une éventuelle référence null.
             _game.ReadInsturctions(instruction.Item1, instruction.Item2);
-#pragma warning restore CS8602 // Déréférencement d'une éventuelle référence null.
         }
     }    
 
     [And(@"The first Team is the winner")]
     public void The_first_Team_is_the_winner()
     {
-        Check.That(_game.Winner).IsEqualTo(_game.Teams.First());
+        Check.That(_game.Winner).IsEqualTo(TeamsKey.Team1);
     }
 
     [And(@"The number ([1-9]|10|11) of first team is ko")]
     public void The_first_Team_is_the_winner(int playerNumber)
     {
-        var player = _game.Teams.First().Players.ElementAt(playerNumber-1);
+        var player = _game.Teams[TeamsKey.Team1].Players.ElementAt(playerNumber-1);
         Check.That(player.IsKo).IsTrue();
     }
     #endregion A game winned by first team at thrid turn

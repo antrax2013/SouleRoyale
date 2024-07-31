@@ -6,10 +6,10 @@ Scenario: Create a game
 	When I create a new game
 	Then 2 teams have been created
 	And Teams have 11 players
-	And The first team is active
 	And The turn number is 0
 	And The max turn number is 7
 	And The soule is in 0 position
+	And The game is not over
 	And Winner is null
 
 Scenario: Set players of first team intial positions

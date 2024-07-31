@@ -1,43 +1,55 @@
 ﻿
 namespace SouleRoyale;
 
+public enum TeamsKey
+{
+    Team1,
+    Team2
+}
+
 public sealed class Game
 {
-    const int MAX_NUMBER_OF_TURN = 7;
-
-    public static int MaxNumberOfTurn => MAX_NUMBER_OF_TURN;
-
-    internal Team? Winner { get; private set; } = null;
-
-    internal bool IsOver => Winner != null;
-
-    internal List<Team> Teams { get; private set; }
-
-    internal Soule Soule { get; private set; }
-
+    public readonly int MaxNumberOfTurn = 7;
+    private readonly int AreaGameNumberOfLine = 3;
     public int NumberOfTurn { get; private set; } = 0;
-    internal Team ActiveTeam
+
+
+    internal Dictionary<TeamsKey, Team> Teams { get; private set; } = [];
+    internal Soule Soule;
+
+    internal TeamsKey? Winner { get; private set; } = null;
+
+    internal bool IsOver => Winner != null || NumberOfTurn == MaxNumberOfTurn;
+    private bool IsGoal => Math.Abs(Soule.Position) == AreaGameNumberOfLine;
+
+
+    internal TeamsKey ActiveTeam
     {
         get
         {
-            if (NumberOfTurn == 0 || (NumberOfTurn % 2 == 1))
-                return Teams.First();
-            return Teams.Last();
+            return (NumberOfTurn % 2 == 0) ? TeamsKey.Team2 : TeamsKey.Team1;
         }
     }
 
-    private bool IsGoal => Math.Abs(Soule.Position) == 3;
+    internal TeamsKey PassiveTeam
+    {
+        get
+        {
+            return (NumberOfTurn % 2 == 0) ? TeamsKey.Team1 : TeamsKey.Team2;
+        }
+    }
 
     public Game()
     {
-        Teams = [new Team("Equipe 1"), new Team("Equipe 2")];
+        Teams.Add(TeamsKey.Team1, new Team(TeamsKey.Team1, AreaGameNumberOfLine));
+        Teams.Add(TeamsKey.Team2, new Team(TeamsKey.Team2, AreaGameNumberOfLine));
         Soule = new Soule();
     }
 
-    public void InitializePositions(string instructions, bool firstTeam)
+    public void InitializePositions(string instructions, TeamsKey teamKey)
     {
         var positions = instructions.Split(' ').Select(i => Convert.ToInt32(i)).ToArray();
-        var players = firstTeam ? Teams.First().Players : Teams.Last().Players;
+        var players = Teams[teamKey].Players;
 
         for (int i = 0; i < positions.Length; i++)
         {
@@ -51,37 +63,38 @@ public sealed class Game
         }
     }
 
-    private bool IsFirstTeamPlayer(Player player) => Teams.First().Players.Contains(player);
+    private static bool IsFirstTeamPlayer(Player player) => player.Team == TeamsKey.Team1;
 
-    private Player GetPlayer(int numberOfPlayer, bool activeTeam)
+    private Player GetPlayer(int playerIndex, TeamsKey targetedTeam)
     {
-        int playerIndex = numberOfPlayer - 1;
-        if (activeTeam)
-        {
-            return ActiveTeam.Players[playerIndex];
-        }
-        else
-        {
-            return (Teams.First(t => t != ActiveTeam)).Players[playerIndex];
-        }
+        return Teams[targetedTeam].Players[playerIndex];
     }
 
-    private void ApplyInstruction(string instruction, Player player, bool activeTeam)
+    private void ApplyInstruction(string instruction, Player player)
     {
-        if (player.IsKo)
+        if (player.IsKo || IsOver)
             return;
 
         switch (instruction)
         {
-            case "+": MoveFoward(player); break;
+            case "+": 
+                MoveFoward(player);
+                if (IsGoal) {
+                    Winner = player.Team;
+                }
+                break;
             case "-": MoveBack(player); break;
             case "0": break;
             case "X": break;
-            default: Hit(player, GetPlayer(Convert.ToInt32(instruction), !activeTeam)); break;
+            default:
+                var targetedPlayerIndex = Convert.ToInt32(instruction) - 1;
+                var targetedTeam = player.Team == TeamsKey.Team1 ? TeamsKey.Team2 : TeamsKey.Team1;
+                Hit(player, GetPlayer(targetedPlayerIndex, targetedTeam)); 
+                break;
         }
     }
 
-    private void Hit(Player player, Player targetedPlayer)
+    private static void Hit(Player player, Player targetedPlayer)
     {
         if (player.Position == targetedPlayer.Position && !targetedPlayer.IsKo)
         {
@@ -89,53 +102,47 @@ public sealed class Game
         }
     }
 
-    private void MoveBack(Player player)
+    private static void MoveBack(Player player)
     {
         if (IsFirstTeamPlayer(player))
             player.Position--;
         else player.Position++;
     }
 
-    private void MoveFoward(Player player)
+    private bool MoveFoward(Player player)
     {
         var delta = IsFirstTeamPlayer(player) ? 1 : -1;
         player.Position += delta;
-        MoveSouleIfNeeded(player.Position, delta);
+        return MoveSouleIfNeeded(player.Position, delta);
     }
 
-    private void MoveSouleIfNeeded(int playerPosition, int delta)
+    private bool MoveSouleIfNeeded(int playerPosition, int delta)
     {
         if (Soule.Position == playerPosition)
         {
             Soule.Position += delta;
         }
+        return IsGoal;
     }
 
     internal void ReadInsturctions(string item1, string item2)
     {
+        if(IsOver)
+        {
+            return;
+        }            
+
         NumberOfTurn++;
-        var team1IsActiveTeam = ActiveTeam == Teams.First();
+        var team1IsActiveTeam = ActiveTeam == TeamsKey.Team1;
         var activeTeamInstruction = team1IsActiveTeam ? item1.Split(" ") : item2.Split(" ");
         var passiveTeamInstruction = team1IsActiveTeam ? item2.Split(" ") : item1.Split(" ");
-        int playerNumber = 1;
+        int playerIndex = 0;
 
-        while (playerNumber <= 11)
+        while (playerIndex < 11 && !IsOver)
         {
-            var index = playerNumber - 1;
-            ApplyInstruction(activeTeamInstruction[index], GetPlayer(playerNumber, true), true);
-            if (IsGoal)
-            {
-                Winner = ActiveTeam;
-                return;
-            }
-
-            ApplyInstruction(passiveTeamInstruction[index], GetPlayer(playerNumber, false), false);
-            if (IsGoal)
-            {
-                Winner = Teams.First(t => t != ActiveTeam);
-                return;
-            }
-            playerNumber++;
+            ApplyInstruction(activeTeamInstruction[playerIndex], GetPlayer(playerIndex, ActiveTeam));
+            ApplyInstruction(passiveTeamInstruction[playerIndex], GetPlayer(playerIndex, PassiveTeam));
+            playerIndex++;
         }
     }
 }

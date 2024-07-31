@@ -11,12 +11,12 @@ public sealed class TeamTests : Feature
 #pragma warning restore CS8618 // Un champ non-nullable doit contenir une valeur non-null lors de la fermeture du constructeur. Envisagez de déclarer le champ comme nullable.
 
     [Given(@"I ask to create a new team")]
-    public void I_ask_to_create_a_new_player() { }
+    public static void I_ask_to_create_a_new_player() { }
 
     [When(@"I create a new team")]
     public void I_create_a_new_player()
     {
-        _team = new Team("");
+        _team = new Team();
     }
 
     [Then(@"The team have 11 players")]
