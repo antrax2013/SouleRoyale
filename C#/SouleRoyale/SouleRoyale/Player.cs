@@ -1,24 +1,36 @@
-﻿namespace SouleRoyale;
+﻿using SouleRoyale.Move;
 
-internal sealed class Player(int number=1, TeamsKey team=TeamsKey.Team1, int maxPosition = 3)
+namespace SouleRoyale;
+
+internal sealed class Player(IMovePlayer move, int lifePoint = 4, int number = 1, TeamsKey team = TeamsKey.Team1)
 {
+    private readonly IMovePlayer _move = move;
+    private int _position = 0;
+
     public readonly int Number = number;
     public readonly TeamsKey Team = team;
-    public readonly int MaxPosition = maxPosition;
-    public int LifePoints { get; internal set; } = 4;
+    public int LifePoints { get; internal set; } = lifePoint;
 
-    private int _position = 0;
     public int Position
     {
         get { return _position; }
         internal set
         {
-            if(IsKo)
-                throw new InvalidOperationException("A KO player cannot move.");
-            if (Math.Abs(value) > MaxPosition)
-                throw new InvalidOperationException("A player cannot leave the game area.");
             _position = value;
         }
     }
     public bool IsKo => LifePoints == 0;
+
+    public void MoveFoward()
+    {
+        if (IsKo)
+            throw new InvalidOperationException("A KO player cannot move.");
+        _move.MoveFoward(this);
+    }
+    public void MoveBack()
+    {
+        if (IsKo)
+            throw new InvalidOperationException("A KO player cannot move.");
+        _move.MoveBack(this);
+    }
 }
